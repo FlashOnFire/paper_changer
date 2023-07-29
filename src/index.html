@@ -1,33 +1,32 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="stylesheet" href="styles.css" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tauri App</title>
-    <script type="module" src="/main.js" defer></script>
-    <style>
-      .logo.vanilla:hover {
-        filter: drop-shadow(0 0 2em #ffe21c);
-      }
-    </style>
-  </head>
 
-  <body>
-    <div class="container">
-      <h1>PaperChanger</h1>
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="styles.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tauri App</title>
+  <script type="module" src="/main.js" defer></script>
+</head>
 
-      <form class="row" id="greet-form">
-        <input id="greet-input" placeholder="Enter a name..." />
-        <button type="submit">Greet</button>
-      </form>
-      <form class="row" id="update-form">
-        <button type="submit">update</button>
-      </form>
+<body>
+  <div class="container">
+    <h1>PaperChanger</h1>
+    <div class="panels_container">
+      <div class="left_panel">
+        <input id="greet-input" placeholder="Search" />
+        <button id="greet-btn" type="button">Filter</button>
+        <button id="update-btn" type="button">update</button>
 
-      <p id="greet-msg"></p>
+        <p id="greet-msg"></p>
 
-      <div id="wallpapers"></div>
+        <div id="wallpapers"></div>
+      </div>
+      <div style="background:orange;" class="right_panel">
+        <p>Right Panel</p>
+      </div>
     </div>
-  </body>
+  </div>
+</body>
+
 </html>

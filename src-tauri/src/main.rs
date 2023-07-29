@@ -59,7 +59,7 @@ async fn main() {
         .setup(move |_| {
             tokio::spawn(async move {
                 loop {
-                    thread::sleep(Duration::from_millis(100));
+                    thread::sleep(Duration::from_millis(1000));
                     singleclient.lock().await.run_callbacks();
                 }
             });

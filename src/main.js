@@ -19,13 +19,11 @@ async function get_papers() {
 window.addEventListener("DOMContentLoaded", () => {
   greetInputEl = document.querySelector("#greet-input");
   greetMsgEl = document.querySelector("#greet-msg");
-  document.querySelector("#greet-form").addEventListener("submit", (e) => {
-    e.preventDefault();
+  document.querySelector("#greet-btn").addEventListener("click", (e) => {
     get_papers();
   });
 
-  document.querySelector("#update-form").addEventListener("submit", (e) => {
-    e.preventDefault();
+  document.querySelector("#update-btn").addEventListener("click", (e) => {
     greet();
   });
 
