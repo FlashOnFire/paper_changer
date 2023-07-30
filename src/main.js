@@ -12,14 +12,20 @@ async function greet() {
 
 async function get_papers() {
   // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-  let papers = JSON.parse(await invoke("get_papers_list", {}));
+  let papers = await invoke("get_papers_list", {});
   console.log(papers);
+
+  wallpapers.innerHTML = "";
+
+  papers.forEach((paper) => {
+    wallpapers.innerHTML += "<img width=\"200\" src=" + paper + " />";
+  });
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  greetInputEl = document.querySelector("#greet-input");
+  greetInputEl = document.querySelector("#search-input");
   greetMsgEl = document.querySelector("#greet-msg");
-  document.querySelector("#greet-btn").addEventListener("click", (e) => {
+  document.querySelector("#filter-btn").addEventListener("click", (e) => {
     get_papers();
   });
 
