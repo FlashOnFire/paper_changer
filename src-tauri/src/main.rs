@@ -8,15 +8,6 @@ use tokio::sync::{oneshot, Mutex};
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
-async fn greet(
-    name: &str,
-    single: tauri::State<'_, Arc<Mutex<SingleClient>>>,
-) -> Result<String, String> {
-    single.lock().await.run_callbacks();
-    Ok(format!("Hello, {}! You've been greeted from Rust!", name))
-}
-
-#[tauri::command]
 async fn get_papers_list(client: tauri::State<'_, Mutex<Client>>) -> Result<Vec<String>, ()> {
     let (tx, rx) = oneshot::channel();
 
@@ -50,20 +41,16 @@ async fn main() {
 
     let singleclient = Arc::new(Mutex::new(single));
 
+    tokio::spawn(async move {
+        loop {
+            thread::sleep(Duration::from_millis(1000));
+            singleclient.clone().lock().await.run_callbacks();
+        }
+    });
+
     tauri::Builder::default()
         .manage(Mutex::new(client))
-        .manage(singleclient.clone())
-        .invoke_handler(tauri::generate_handler![greet, get_papers_list])
-        .setup(move |_| {
-            tokio::spawn(async move {
-                loop {
-                    thread::sleep(Duration::from_millis(1000));
-                    singleclient.lock().await.run_callbacks();
-                }
-            });
-
-            Ok(())
-        })
+        .invoke_handler(tauri::generate_handler![get_papers_list])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

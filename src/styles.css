@@ -53,6 +53,14 @@ body {
   flex: 1;
 }
 
+.panels_container .left_panel #wallpapers {
+  display: flex;
+  flex-direction: row;
+  flex-flow: row wrap;
+  gap: 10px;
+  overflow-y: scroll;
+}
+
 .panels_container .right_panel {
   width: 25%;
   max-width: 300px;
