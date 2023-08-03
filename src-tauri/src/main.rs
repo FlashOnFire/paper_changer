@@ -37,7 +37,7 @@ async fn get_papers_list(client: tauri::State<'_, Mutex<Client>>) -> Result<Vec<
 #[tokio::main]
 async fn main() {
     let (client, single) =
-        Client::init().expect("Error initializing Steam client. Is Steam running ?");
+        Client::init_app(431960).expect("Error initializing Steam client. Is Steam running ?");
 
     let singleclient = Arc::new(Mutex::new(single));
 
