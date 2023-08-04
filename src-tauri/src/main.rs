@@ -3,7 +3,7 @@
 
 use std::{sync::Arc, thread, time::Duration, vec};
 
-use steamworks::{Client, SingleClient};
+use steamworks::{Client};
 use tokio::sync::{oneshot, Mutex};
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
@@ -36,6 +36,9 @@ async fn get_papers_list(client: tauri::State<'_, Mutex<Client>>) -> Result<Vec<
 
 #[tokio::main]
 async fn main() {
+    std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
+
+
     let (client, single) =
         Client::init_app(431960).expect("Error initializing Steam client. Is Steam running ?");
 
