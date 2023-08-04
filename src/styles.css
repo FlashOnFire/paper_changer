@@ -59,6 +59,7 @@ body {
   flex-flow: row wrap;
   gap: 10px;
   overflow-y: scroll;
+  height: 100%;
 }
 
 .panels_container .right_panel {
