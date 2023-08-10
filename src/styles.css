@@ -18,7 +18,7 @@ body {
   box-sizing: border-box;
   margin: 0;
   background: #222222;
-  border: 2px solid #2A60B7;
+  border: 1px solid #4183F5;
   padding: 17px;
   padding-top: 5px;
   height: 100vh;
@@ -33,7 +33,7 @@ body {
 .container h1 {
   text-align: center;
   font-weight: 300;
-  font-size: 18px;
+  font-size: 16px;
   margin: 0;
 }
 
@@ -57,9 +57,10 @@ body {
   display: flex;
   flex-direction: row;
   flex-flow: row wrap;
-  gap: 10px;
+  gap: 5px;
   overflow-y: scroll;
   height: 100%;
+  padding: 1px;
 }
 
 .panels_container .right_panel {
@@ -83,7 +84,7 @@ input {
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
-  color: #999999;
+  color: #ddd;
   background-color: #090808;
   transition: border-color 0.25s;
 }
@@ -122,4 +123,65 @@ button {
 
 #greet-input {
   margin-right: 5px;
+}
+
+.wallpaper {
+  position: relative;
+  transition: transform 0.5s, outline 0.1s;
+  overflow: hidden;
+  width: 180px;
+  height: 180px;
+}
+
+.wallpaper:hover {
+  cursor: pointer;
+  outline: 1px solid #6189CD;
+}
+
+.wallpaper.selected::after {
+  box-shadow:0px 0px 0px 3px #4183F5 inset;
+  content: '';
+  display: block;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  width: 100%;
+}
+
+.wallpaper .wallpaper-img {
+  transition: transform 0.25s;
+  height: 100%;
+}
+
+.wallpaper:hover .wallpaper-img {
+  transform: scale(1.2);
+}
+
+.wallpaper .wallpaper-title-container {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, 0);
+  width: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  transition: background 0.25s;
+  margin: 0;
+  padding: 5px;
+  height: 15%;
+  vertical-align: middle;
+  text-align: center;
+  margin: 0;
+}
+
+.wallpaper .wallpaper-title-container .wallpaper-title {
+  margin: 0;
+}
+
+.wallpaper:hover .wallpaper-title-container {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.wallpaper .wallpaper-title-container .wallpaper-title {
+  font-size: 11px;
+  color: #c5c5c5;
 }

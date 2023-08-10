@@ -1,17 +1,17 @@
 const { invoke } = window.__TAURI__.tauri;
 const { emit, listen } = window.__TAURI__.event;
 
-let greetInputEl;
-let greetMsgEl;
 let wallpapers;
+let selectedWallpaper;
 
-async function greet() {
-  // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-  greetMsgEl.textContent = await invoke("greet", { name: greetInputEl.value });
+let selectedWallpaperImg;
+let selectedWallpaperTitle;
+
+async function fetch_wallpapers() {
+  await emit("fetch_wallpapers");
 }
 
 async function get_papers() {
-  // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
   let papers = await invoke("get_papers_list", {});
   console.log(papers);
 
@@ -23,26 +23,60 @@ async function get_papers() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  greetInputEl = document.querySelector("#search-input");
-  greetMsgEl = document.querySelector("#greet-msg");
   document.querySelector("#filter-btn").addEventListener("click", (e) => {
     get_papers();
   });
 
   document.querySelector("#update-btn").addEventListener("click", (e) => {
-    greet();
+    fetch_wallpapers();
   });
 
   wallpapers = document.querySelector("#wallpapers");
+
+  wallpapers.addEventListener("click", onWallpaperClick);
+
+  selectedWallpaperImg = document.querySelector(".right_panel .selected-paper-img");
+  selectedWallpaperTitle = document.querySelector(".right_panel .selected-paper-title");
+
+  emit('loaded');
 });
 
-const unlisten = await listen('click', (event) => {
-  // event.event is the event name (useful if you want to use a single callback fn for multiple event types)
-  // event.payload is the payload object
-  console.log(event.event, event.payload)
+await listen('addWallpaper', (event) => {
+  //console.log(event.event, event.payload)
+
+  let paper = event.payload;
+
+  wallpapers.innerHTML += "<div class=\"wallpaper\" id=\"" + paper.id + "\">" +
+                            "<img class=\"wallpaper-img\" width=\"200\" src=" + paper.preview_url + " />" + 
+                            "<div class=\"wallpaper-title-container\"><span class=\"wallpaper-title\">" + paper.title + "</span></div>" +
+                          "</div>";
 })
 
-// emits the `click` event with the object payload
-emit('click', {
-  theMessage: 'Tauri is awesome!',
+await listen('updateSelectedWallpaperInfo', (event) => {
+  //console.log(event.event, event.payload)
+  let paper = event.payload;
+
+  selectedWallpaperImg.src = paper.preview_url;
+  selectedWallpaperTitle.innerHTML = paper.title;
 })
+
+function onWallpaperClick(e) {
+  let target = e.target;
+
+  if (target.classList.contains("wallpaper-img") || target.classList.contains("wallpaper-title-container")) {
+    target = target.parentNode;
+  } else if (target.classList.contains("wallpaper-title")) {
+    target = target.parentNode.parentNode;
+  }
+
+  if (target.classList.contains("wallpaper")) {
+    console.log("Clicked on wallpaper " + target.id);
+    if (selectedWallpaper != null) {
+      selectedWallpaper.classList.remove("selected");
+    }
+    target.classList.add("selected");
+    selectedWallpaper = target
+
+    emit('wallpaperSelected', {id: target.id});
+  }
+}

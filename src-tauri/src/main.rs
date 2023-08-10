@@ -1,59 +1,113 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::{sync::Arc, thread, time::Duration, vec};
+use std::{
+    ops::DerefMut,
+    sync::{Arc, Mutex},
+    thread,
+    time::Duration,
+    vec,
+};
 
-use steamworks::{Client};
-use tokio::sync::{oneshot, Mutex};
+mod wallpaper;
+mod wallpaper_engine;
 
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-#[tauri::command]
-async fn get_papers_list(client: tauri::State<'_, Mutex<Client>>) -> Result<Vec<String>, ()> {
-    let (tx, rx) = oneshot::channel();
-
-    let v = client.lock().await;
-
-    v.ugc()
-        .query_items(v.ugc().subscribed_items())
-        .unwrap()
-        .fetch(|query_result| {
-            let res = query_result.unwrap();
-            println!("{} Subscribed items", res.total_results());
-
-            let mut urls = Vec::new();
-            for i in 0..res.total_results() {
-                urls.push(res.preview_url(i).unwrap());
-            }
-
-            println!("{:?}", urls);
-
-            println!("{}", res.preview_url(0).unwrap());
-
-            tx.send(urls).unwrap();
-        });
-    Ok(rx.await.unwrap())
-}
+use serde_json::Value;
+use steamworks::{Client, PublishedFileId};
+use tauri::Manager;
+use wallpaper::Wallpaper;
+use wallpaper_engine::WallpaperEngine;
 
 #[tokio::main]
 async fn main() {
     std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
 
+    let engine = Arc::new(Mutex::new(WallpaperEngine::new()));
 
-    let (client, single) =
+    let (client, single_client) =
         Client::init_app(431960).expect("Error initializing Steam client. Is Steam running ?");
 
-    let singleclient = Arc::new(Mutex::new(single));
+    let client = Arc::new(Mutex::new(client));
+    let client2 = Arc::clone(&client);
+    let single_client = Arc::new(Mutex::new(single_client));
 
     tokio::spawn(async move {
         loop {
             thread::sleep(Duration::from_millis(1000));
-            singleclient.clone().lock().await.run_callbacks();
+            single_client.clone().lock().unwrap().run_callbacks();
         }
     });
 
     tauri::Builder::default()
-        .manage(Mutex::new(client))
-        .invoke_handler(tauri::generate_handler![get_papers_list])
+        .manage(Arc::clone(&client))
+        .invoke_handler(tauri::generate_handler![])
+        .setup(|app| {
+            let main_window = Arc::new(app.get_window("main").unwrap());
+            let main_window2 = Arc::clone(&main_window);
+            let main_window3 = Arc::clone(&main_window);
+
+            app.once_global("loaded", move |_| {
+                main_window.show().unwrap();
+            });
+
+            app.listen_global("fetch_wallpapers", move |_| {
+                let main_window = Arc::clone(&main_window2);
+                let ugc = client.lock().unwrap().ugc();
+
+                ugc.query_items(ugc.subscribed_items())
+                    .unwrap()
+                    .fetch(move |query_result| {
+                        let main_window = Arc::clone(&main_window);
+
+                        let res = query_result.unwrap();
+                        println!("{} Subscribed items", res.total_results());
+
+                        let mut wallpapers = Vec::new();
+                        for i in 0..res.total_results() {
+                            let result = res.get(i).unwrap();
+                            let preview_url = res.preview_url(i).unwrap();
+
+                            wallpapers.push(Wallpaper::new(result, preview_url));
+                        }
+
+                        wallpapers.sort_by(|a, b| a.title.cmp(&b.title));
+                        wallpapers.iter().for_each(|paper| {
+                            main_window.emit("addWallpaper", paper).unwrap();
+                        });
+                    });
+            });
+
+            app.listen_global("wallpaperSelected", move |e| {
+                let main_window3 = Arc::clone(&main_window3);
+                let engine = Arc::clone(&engine);
+
+                let payload = e.payload().unwrap();
+                let json = serde_json::from_str::<Value>(payload).unwrap();
+
+                let id = json.get("id").unwrap().as_str().unwrap();
+
+                println!("Wallpaper selected: {}", id);
+
+                let ugc = client2.lock().unwrap().ugc();
+
+                ugc.query_item(PublishedFileId(id.parse().unwrap()))
+                    .unwrap()
+                    .fetch(move |item| {
+                        let item = item.unwrap();
+                        let paper =
+                            Wallpaper::new(item.get(0).unwrap(), item.preview_url(0).unwrap());
+
+                        let mut engine = engine.lock().unwrap();
+                        engine.set_paper(&paper);
+
+                        main_window3
+                            .emit("updateSelectedWallpaperInfo", paper)
+                            .unwrap();
+                    });
+            });
+
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
