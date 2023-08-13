@@ -2,19 +2,19 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use std::{
-    ops::DerefMut,
     sync::{Arc, Mutex},
     thread,
     time::Duration,
-    vec,
 };
 
 mod wallpaper;
 mod wallpaper_engine;
+mod events;
 
 use serde_json::Value;
 use steamworks::{Client, PublishedFileId};
 use tauri::Manager;
+use tauri::WindowEvent::CloseRequested;
 use wallpaper::Wallpaper;
 use wallpaper_engine::WallpaperEngine;
 
@@ -22,7 +22,8 @@ use wallpaper_engine::WallpaperEngine;
 async fn main() {
     std::env::set_var("WEBKIT_DISABLE_COMPOSITING_MODE", "1");
 
-    let engine = Arc::new(Mutex::new(WallpaperEngine::new()));
+    let tx = Arc::new(Mutex::new(WallpaperEngine::new()));
+    let tx2 = Arc::clone(&tx);
 
     let (client, single_client) =
         Client::init_app(431960).expect("Error initializing Steam client. Is Steam running ?");
@@ -41,6 +42,15 @@ async fn main() {
     tauri::Builder::default()
         .manage(Arc::clone(&client))
         .invoke_handler(tauri::generate_handler![])
+        .on_window_event(move |event| {
+            match event.event() {
+                CloseRequested{api: _, ..} => {
+                    println!("close requested");
+                    tx.lock().unwrap().send(events::WEEvent::Close).unwrap();
+                }
+                _ => { },
+            }
+        })
         .setup(|app| {
             let main_window = Arc::new(app.get_window("main").unwrap());
             let main_window2 = Arc::clone(&main_window);
@@ -79,7 +89,7 @@ async fn main() {
 
             app.listen_global("wallpaperSelected", move |e| {
                 let main_window3 = Arc::clone(&main_window3);
-                let engine = Arc::clone(&engine);
+                let tx2 = Arc::clone(&tx2);
 
                 let payload = e.payload().unwrap();
                 let json = serde_json::from_str::<Value>(payload).unwrap();
@@ -97,8 +107,7 @@ async fn main() {
                         let paper =
                             Wallpaper::new(item.get(0).unwrap(), item.preview_url(0).unwrap());
 
-                        let mut engine = engine.lock().unwrap();
-                        engine.set_paper(&paper);
+                        tx2.lock().unwrap().send(events::WEEvent::WPChange(paper.clone())).unwrap();
 
                         main_window3
                             .emit("updateSelectedWallpaperInfo", paper)
@@ -110,4 +119,6 @@ async fn main() {
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+
+    println!("onquit");
 }
