@@ -43,12 +43,9 @@ async fn main() {
         .manage(Arc::clone(&client))
         .invoke_handler(tauri::generate_handler![])
         .on_window_event(move |event| {
-            match event.event() {
-                CloseRequested{api: _, ..} => {
-                    println!("close requested");
-                    tx.lock().unwrap().send(events::WEEvent::Close).unwrap();
-                }
-                _ => { },
+            if let CloseRequested{api: _, ..} = event.event() {
+                println!("close requested");
+                tx.lock().unwrap().send(events::WEEvent::Close).unwrap();
             }
         })
         .setup(|app| {
