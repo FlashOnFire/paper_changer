@@ -1,34 +1,26 @@
 const { invoke } = window.__TAURI__.tauri;
 const { emit, listen } = window.__TAURI__.event;
 
+let input;
 let wallpapers;
 let selectedWallpaper;
 
 let selectedWallpaperImg;
 let selectedWallpaperTitle;
 
-async function fetch_wallpapers() {
-  await emit("fetch_wallpapers");
-}
-
-async function get_papers() {
-  let papers = await invoke("get_papers_list", {});
-  console.log(papers);
-
-  wallpapers.innerHTML = "";
-
-  papers.forEach((paper) => {
-    wallpapers.innerHTML += "<img width=\"200\" src=" + paper + " />";
-  });
-}
+let firstLoad = false;
 
 window.addEventListener("DOMContentLoaded", () => {
   document.querySelector("#filter-btn").addEventListener("click", (e) => {
-    get_papers();
   });
 
   document.querySelector("#update-btn").addEventListener("click", (e) => {
-    fetch_wallpapers();
+    invoke("apply_filter", {search: input.value});
+  });
+
+  input = document.querySelector("#search-input");
+  input.addEventListener("keyup", (e) => {
+    invoke("apply_filter", {search: input.value});
   });
 
   wallpapers = document.querySelector("#wallpapers");
@@ -38,27 +30,46 @@ window.addEventListener("DOMContentLoaded", () => {
   selectedWallpaperImg = document.querySelector(".right_panel .selected-paper-img");
   selectedWallpaperTitle = document.querySelector(".right_panel .selected-paper-title");
 
-  emit('loaded');
+  invoke("fetch_wallpapers");
+  invoke('loaded');
+  getMonitorsList();
 });
 
-await listen('addWallpaper', (event) => {
-  //console.log(event.event, event.payload)
+await listen('updated', (event) => {
+  if (!firstLoad) {
+    firstLoad = true;
+    invoke("apply_filter", {search: input.value});
+  }
+});
 
-  let paper = event.payload;
+await listen('addWallpapers', (event) => {
+  console.log(event.event, event.payload)
+  let papers = event.payload;
 
-  wallpapers.innerHTML += "<div class=\"wallpaper\" id=\"" + paper.id + "\">" +
-                            "<img class=\"wallpaper-img\" width=\"200\" src=" + paper.preview_url + " />" + 
-                            "<div class=\"wallpaper-title-container\"><span class=\"wallpaper-title\">" + paper.title + "</span></div>" +
-                          "</div>";
+  papers.forEach((paper) => {
+    wallpapers.innerHTML += "<div class=\"wallpaper\" id=\"" + paper.id + "\">" +
+        "<img class=\"wallpaper-img\" width=\"200\" src=" + paper.preview_url + " />" +
+        "<div class=\"wallpaper-title-container\"><span class=\"wallpaper-title\">" + paper.title + "</span></div>" +
+        "</div>";
+  });
 })
 
 await listen('updateSelectedWallpaperInfo', (event) => {
-  //console.log(event.event, event.payload)
   let paper = event.payload;
 
   selectedWallpaperImg.src = paper.preview_url;
   selectedWallpaperTitle.innerHTML = paper.title;
 })
+
+await listen('clearWallpapers', (event) => {
+  wallpapers.innerHTML = "";
+})
+
+async function getMonitorsList() {
+  console.log("Getting monitors list");
+  let monitors = await invoke('get_monitors');
+  console.log(monitors);
+}
 
 function onWallpaperClick(e) {
   let target = e.target;
@@ -77,6 +88,6 @@ function onWallpaperClick(e) {
     target.classList.add("selected");
     selectedWallpaper = target
 
-    emit('wallpaperSelected', {id: target.id});
+    invoke('select_wallpaper', {id: parseInt(target.id)});
   }
 }
