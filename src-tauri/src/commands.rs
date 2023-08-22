@@ -3,7 +3,7 @@ use crate::wallpaper::Wallpaper;
 use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex};
 use steamworks::PublishedFileId;
-use tauri::{Monitor, State};
+use tauri::State;
 use xrandr_parser::Parser;
 
 #[tauri::command]
@@ -70,14 +70,25 @@ pub fn select_wallpaper(
 
 #[tauri::command]
 pub fn apply_filter(
-    search: String,
+    search: &str,
+    order_by: &str,
     wallpapers: State<Arc<Mutex<Vec<Wallpaper>>>>,
     window: tauri::Window,
 ) {
     println!("apply_filter");
 
     let mut wallpapers = wallpapers.lock().unwrap().clone();
-    wallpapers.sort_by(|a, b| a.title.cmp(&b.title));
+
+    match order_by {
+        "name" => wallpapers.sort_by(|a, b| a.title.cmp(&b.title)),
+        "rating" => wallpapers.sort_by(|a, b| a.rating.total_cmp(&b.rating)),
+        "favorites" => wallpapers.sort_by(|a, b| a.fav.cmp(&b.fav)),
+        "file_size" => wallpapers.sort_by(|a, b| a.file_size.cmp(&b.file_size).reverse()),
+        "sub_date" => wallpapers.sort_by(|a, b| a.sub_date.cmp(&b.sub_date)),
+        "last_updated" => wallpapers.sort_by(|a, b| a.updated_at.cmp(&b.updated_at).reverse()),
+        _ => {}
+    }
+
     wallpapers.retain(|wp| wp.title.to_lowercase().contains(&search.to_lowercase()));
 
     println!("apply_filter: {}", wallpapers.len());

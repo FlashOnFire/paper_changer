@@ -14,11 +14,20 @@
     <h1>PaperChanger</h1>
     <div class="panels_container">
       <div class="left_panel">
-        <input id="search-input" placeholder="Search" />
-        <button id="filter-btn" type="button">Filter</button>
-        <button id="update-btn" type="button">update</button>
+          <div id="navbar">
+            <input id="search-input" placeholder="Search" />
+            <button id="filter-btn" type="button">Filter</button>
+            <button id="update-btn" type="button">update</button>
 
-        <p id="greet-msg"></p>
+            <select id="order-select">
+                <option value="name">Name</option>
+                <option value="nature">Rating (WIP)</option>
+                <option value="favorites">Favorite (WIP)</option>
+                <option value="file_size">File Size</option>
+                <option value="sub_date">Subscription Date (WIP)</option>
+                <option value="last_updated">Last Updated</option>
+            </select>
+          </div>
 
         <div id="wallpapers"></div>
       </div>

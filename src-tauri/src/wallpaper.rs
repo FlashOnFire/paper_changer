@@ -8,8 +8,11 @@ pub struct Wallpaper {
     pub title: String,
     pub url: String,
     pub preview_url: String,
-    pub created_at: u32,
     pub updated_at: u32,
+    pub rating: f32,
+    pub fav: bool,
+    pub file_size: u32,
+    pub sub_date: u32,
     pub wallpaper_settings: Option<WallpaperSettings>,
 }
 
@@ -20,8 +23,11 @@ impl Wallpaper {
             title: res.title,
             url: res.url,
             preview_url,
-            created_at: res.time_created,
             updated_at: res.time_updated,
+            rating: res.score,
+            fav: false, // TODO: implement favorites
+            file_size: res.file_size,
+            sub_date: 0, // TODO: implement sub_date
             wallpaper_settings: None,
         }
     }

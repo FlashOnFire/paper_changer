@@ -1,7 +1,8 @@
 const { invoke } = window.__TAURI__.tauri;
 const { emit, listen } = window.__TAURI__.event;
 
-let input;
+let search_input;
+let order_select;
 let wallpapers;
 let selectedWallpaper;
 
@@ -15,13 +16,18 @@ window.addEventListener("DOMContentLoaded", () => {
   });
 
   document.querySelector("#update-btn").addEventListener("click", (e) => {
-    invoke("apply_filter", {search: input.value});
+    invoke("apply_filter", {search: search_input.value});
   });
 
-  input = document.querySelector("#search-input");
-  input.addEventListener("keyup", (e) => {
-    invoke("apply_filter", {search: input.value});
+  search_input = document.querySelector("#search-input");
+  search_input.addEventListener("keyup", (e) => {
+    filterWallpapers();
   });
+
+    order_select = document.querySelector("#order-select");
+    order_select.addEventListener("change", (e) => {
+      filterWallpapers();
+    });
 
   wallpapers = document.querySelector("#wallpapers");
 
@@ -38,7 +44,7 @@ window.addEventListener("DOMContentLoaded", () => {
 await listen('updated', (event) => {
   if (!firstLoad) {
     firstLoad = true;
-    invoke("apply_filter", {search: input.value});
+    filterWallpapers();
   }
 });
 
@@ -69,6 +75,10 @@ async function getMonitorsList() {
   console.log("Getting monitors list");
   let monitors = await invoke('get_monitors');
   console.log(monitors);
+}
+
+function filterWallpapers() {
+  invoke("apply_filter", {search: search_input.value, orderBy: order_select.value});
 }
 
 function onWallpaperClick(e) {

@@ -49,8 +49,8 @@ body {
 
 .panels_container .left_panel {
   min-width: 70%;
-  height: 80vh;
-  flex: 1;
+  height: 100vh;
+  flex: 80vh;
 }
 
 .panels_container .left_panel #wallpapers {
@@ -79,9 +79,14 @@ body {
   max-width: 90%
 }
 
-input {
+#navbar {
+  margin-bottom: 10px;
+}
+
+#search-input {
   border: 1px solid #3C3B3B;
   padding: 0.6em 1.2em;
+  margin-right: 5px;
   font-size: 1em;
   font-weight: 500;
   color: #ddd;
